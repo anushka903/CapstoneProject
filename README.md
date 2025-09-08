@@ -1,1 +1,1 @@
-# Salary Optimization Framework for WNBA Players
+Salary Optimization Framework for WNBA Players
