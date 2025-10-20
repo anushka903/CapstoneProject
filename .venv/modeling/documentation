@@ -1,0 +1,104 @@
+phase 4: performance index modeling and validation
+
+phase 4 focuses on building and validating a data-driven performance index (pi) that measures player performance relative to salary. the overall objective is to figure out which basketball statistics most strongly influence compensation and combine them into a single composite metric that represents player value across time.
+this phase is fully code-based, broken into clear modular scripts so that it can be rerun whenever new data or seasons are added.
+
+step 1 – loading and cleaning data (load_all_seasons.py)
+
+this step combines all season csvs (from 2001–2002 through 2024–2025) into one standardized dataset.
+each file is read, cleaned, and normalized before being merged.
+inconsistent column names are fixed (like changing “3:00 pm” to “3p”), numeric fields such as fg%, 3p%, reb, and salary are properly converted to numbers, and formatting artifacts like $, %, or commas are removed.
+each record is also labeled with its season so that later analysis can group data by year.
+player and team names are stripped of extra spaces, duplicates are removed, and the final dataset is saved as all_seasons_clean.csv.
+this file is the foundation for all later modeling.
+
+step 2 – preparing data for modeling (prepare_model_data.py)
+
+once the cleaned dataset is ready, it’s processed into a form suitable for modeling.
+this involves removing non-predictive identifiers (like team, id, and age) that don’t contribute to salary prediction, splitting the dataset into predictors (x) and target (y = salary), converting all remaining columns to numeric, filling missing values with the column median, and standardizing all numeric features.
+standardization ensures that all variables are on the same scale, which is important for many machine learning algorithms.
+the data is then split into a 90/10 training and testing set, and all files are saved in the prepared_data folder.
+this ensures a consistent, reproducible dataset for the modeling phase.
+
+step 3a – feature importance modeling (derive_feature_importance_v1.py)
+
+the first modeling step identifies which statistics are most influential in determining salary.
+this is done by training two models: a random forest regressor and an xgboost regressor, both of which estimate feature importances.
+feature importance measures how much each variable contributes to predicting salary.
+the random forest captures non-linear relationships, while xgboost fine-tunes relationships through gradient boosting.
+after both models are trained, their results are merged and averaged to create a combined importance score for each feature.
+these outputs are saved as three csvs inside the model_outputs folder.
+
+this first version (v1) treated all 25 seasons as one combined dataset, assuming the same relationship between performance and salary across all years.
+while this produced a useful baseline, it ignored the way player valuation changes over time.
+for example, in the early 2000s, rebounding and post play mattered more, while later on, 3-point shooting and efficiency became dominant factors.
+
+step 3b – performance index derivation (derive_performance_index_v1.py)
+
+the next step builds and tests several candidate performance index formulas based on the feature importances from v1.
+three formulas are constructed:
+
+model-weighted: uses the combined feature importances as weights.
+
+equal-weighted: gives each selected stat equal influence.
+
+correlation-weighted: weights each stat directly by its correlation with salary.
+
+each formula is calculated and tested against actual salaries by computing its correlation with the salary column.
+the results show that the model-weighted performance index achieves a moderate correlation of around 0.36, while the equal-weighted and correlation-weighted versions perform worse or inconsistently.
+
+this shows that the model captures part of the salary relationship but fails to fully explain it.
+the main reason for this is that basketball has changed dramatically over the past two decades — how teams and contracts value different skills has evolved, so a single static weighting across all 25 seasons dilutes the signal.
+
+refinement: route 1 – season-specific feature weighting (derive_feature_importance_v2.py)
+
+to address the limitations of v1, the modeling process was redesigned to compute feature importances separately for each season rather than combining everything into one global model.
+this approach recognizes that each season might have different valuation patterns depending on league trends, roster composition, and style of play.
+
+in this version, the script loops through every season, trains both models (random forest and xgboost) on that season’s players only, normalizes the feature importances so that they sum to one for that season, and then averages the normalized results across all 25 years.
+the output is an era-aware importance distribution that reflects evolving player valuation rather than a one-size-fits-all relationship.
+
+the resulting averaged feature importances are saved as feature_importance_combined.csv and are used in the next step to construct a more historically contextual performance index.
+
+step 3b (refined) – performance index derivation (derive_performance_index_v2.py)
+
+this updated script reuses the same three index formulas as before, but now it applies the new season-weighted importance scores from the v2 feature importance modeling step.
+
+after recalculating the performance indices, the results show modest improvement.
+the correlation between the model-weighted performance index and salary rises from about 0.36 in the first version to about 0.47 in the season-weighted version.
+the correlation-weighted formula achieves a similar result at around 0.4759, while the equal-weighted formula remains relatively weak and slightly negative.
+
+this improvement confirms that including temporal weighting — where feature importances are balanced by season — helps the performance index align more closely with real-world salary patterns.
+however, the correlation is still below the ideal 0.8 to 0.9 range that would represent a near-complete alignment between modeled performance and actual compensation.
+
+analysis of current results
+
+the current results show that the approach is moving in the right direction but still has room for improvement.
+a correlation around 0.47 means the performance index explains some salary variation, but not all.
+the remaining gap likely comes from several structural factors that pure performance metrics cannot fully capture.
+
+first, nba salaries are influenced by external constraints like salary caps, contract structures, tenure, team budget, and player reputation.
+second, short-term trends or injuries can cause salary outliers that models based purely on performance cannot predict.
+third, mixing all 25 years together still introduces noise from changes in playstyle, rule adjustments, and shifts in market valuation.
+
+for example, early-2000s teams valued size, rebounding, and defense; the 2010s saw a surge in perimeter shooting and efficiency-based evaluation; and the 2020s emphasize versatility, spacing, and switchability.
+these shifts mean that the relationship between stats and salary isn’t linear or static — it evolves with time, and annual weighting can only partially capture that.
+
+next refinement – era-segmented modeling
+
+to further strengthen the model, the next iteration will segment data into broader eras instead of treating each individual season separately.
+a likely grouping would be 2001–2010, 2011–2020, and 2021–2025, representing three distinct periods in modern basketball.
+feature importances will be computed separately for each era and then used to generate era-specific performance indices.
+
+this approach will smooth out the year-to-year noise while still respecting long-term structural changes in how player value is defined.
+it should push the correlation much higher, ideally into the 0.7–0.9 range, making the performance index a more accurate reflection of fair compensation.
+
+summary of versions
+
+the evolution from v1 to v2 represents a key conceptual improvement in the modeling design.
+v1 assumed that the importance of each stat stayed constant across two decades, which diluted predictive accuracy.
+v2 recognizes that basketball evolves — so it adjusts the weighting system to reflect how player valuation shifts from season to season.
+the improvement from a correlation of roughly 0.36 to 0.47 demonstrates that the approach is becoming more aligned with real-world compensation trends, even though there’s still more complexity to capture.
+
+the next planned step, era-based modeling, will serve as a bridge between the two extremes — not as volatile as annual weighting, but more realistic than treating 25 years of data as one uniform system.
+together, these steps form a robust foundation for a long-term model of player value that adapts to changing definitions of performance and fairness in professional basketball economics.

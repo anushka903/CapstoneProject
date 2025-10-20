@@ -1,0 +1,18 @@
+# python + venv
+__pycache__/
+*.pyc
+.venv/
+venv/
+ENV/
+pyvenv.cfg
+
+# system
+.DS_Store
+
+# modeling outputs
+modeling/prepared_data/
+modeling/model_outputs/
+modeling/performance_index_outputs/
+
+# misc
+.ipynb_checkpoints/
