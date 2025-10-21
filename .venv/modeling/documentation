@@ -3,7 +3,7 @@ phase 4: performance index modeling and validation
 phase 4 focuses on building and validating a data-driven performance index (pi) that measures player performance relative to salary. the overall objective is to figure out which basketball statistics most strongly influence compensation and combine them into a single composite metric that represents player value across time.
 this phase is fully code-based, broken into clear modular scripts so that it can be rerun whenever new data or seasons are added.
 
-step 1 – loading and cleaning data (load_all_seasons.py)
+step 1 – loading and cleaning data (data_cleaning.py)
 
 this step combines all season csvs (from 2001–2002 through 2024–2025) into one standardized dataset.
 each file is read, cleaned, and normalized before being merged.
@@ -12,7 +12,7 @@ each record is also labeled with its season so that later analysis can group dat
 player and team names are stripped of extra spaces, duplicates are removed, and the final dataset is saved as all_seasons_clean.csv.
 this file is the foundation for all later modeling.
 
-step 2 – preparing data for modeling (prepare_model_data.py)
+step 2 – preparing data for modeling (prepare_model.py)
 
 once the cleaned dataset is ready, it’s processed into a form suitable for modeling.
 this involves removing non-predictive identifiers (like team, id, and age) that don’t contribute to salary prediction, splitting the dataset into predictors (x) and target (y = salary), converting all remaining columns to numeric, filling missing values with the column median, and standardizing all numeric features.
