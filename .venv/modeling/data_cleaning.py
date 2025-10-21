@@ -1,5 +1,5 @@
 """
-load_all_seasons.py
+data_cleaning.py
 ---------------------------------------
 step 1 of phase 4: this script loads all the season csv files (2001–2002 through 2024–2025)
 from the 'data/' folder, cleans them up a bit, merges everything into one large dataframe,
