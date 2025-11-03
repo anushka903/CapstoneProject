@@ -18,10 +18,11 @@ df = pd.read_csv("All_Seasons_Clean.csv")  # Replace with your path
 # -----------------------------
 # 1a. Remove unnecessary columns
 # -----------------------------
-for col in ['Season', 'UNNAMED:_0', 'Unnamed:_0']:
+for col in ['Season', 'UNNAMED:_0', 'Unnamed:_0', 'Salary', 'Age', 'Min', '+/-', 'Id']:
     if col in df.columns:
         df.drop(columns=col, inplace=True)
 
+# ['Season', 'UNNAMED:_0', 'Unnamed:_0', 'DD2', '3PA', 'TD3', '3P', 'Salary', 'Age', 'Min', '+/-', 'Id', 'FT%', 'FG%', 'FTA', 'FGA', 'REB']
 # -----------------------------
 # 1b. Handle missing target
 # -----------------------------
@@ -38,16 +39,41 @@ numeric_cols.remove('SALARY')
 if 'Player_Comp_Share' in numeric_cols:
     numeric_cols.remove('Player_Comp_Share')
 
-# # Remove AGE
-# if 'AGE' in numeric_cols:
-#     numeric_cols.remove('AGE')
-
 X = df[numeric_cols].fillna(0)
 y = df['SALARY']
 
 # Scale features
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
+
+# -----------------------------
+# 2b. Correlation Heatmap
+# -----------------------------
+corr_matrix = df[numeric_cols + ['SALARY']].corr()
+
+plt.figure(figsize=(14, 10))
+sns.heatmap(
+    corr_matrix,
+    annot=True,
+    fmt=".2f",
+    cmap="coolwarm",
+    linewidths=0.5,
+    cbar_kws={"shrink": 0.8}
+)
+plt.title("Correlation Heatmap Between Variables and Salary", fontsize=14)
+plt.tight_layout()
+plt.show()
+
+# Optional: Focused correlation with Salary only
+salary_corr = corr_matrix['SALARY'].sort_values(ascending=False)
+
+plt.figure(figsize=(8, 10))
+sns.barplot(x=salary_corr.values, y=salary_corr.index, palette="coolwarm")
+plt.title("Feature Correlation with Salary", fontsize=14)
+plt.xlabel("Correlation Coefficient")
+plt.ylabel("Feature")
+plt.tight_layout()
+plt.show()
 
 # -----------------------------
 # 3. Train-test split
