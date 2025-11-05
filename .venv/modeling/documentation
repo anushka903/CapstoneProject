@@ -102,3 +102,19 @@ the improvement from a correlation of roughly 0.36 to 0.47 demonstrates that the
 
 the next planned step, era-based modeling, will serve as a bridge between the two extremes — not as volatile as annual weighting, but more realistic than treating 25 years of data as one uniform system.
 together, these steps form a robust foundation for a long-term model of player value that adapts to changing definitions of performance and fairness in professional basketball economics.
+
+rf_salary_importance.py
+
+This script generates a baseline set of feature importance scores using a Random Forest model to understand which player statistics most strongly influence salary. The script loads the cleaned dataset 
+(All_Seasons_Clean.csv), removes non-performance identifiers, converts all columns to numeric where necessary, and standardizes statistical features. A Random Forest Regressor is trained to predict salary,
+and model evaluation is done using RMSE and R². After training, feature importance scores are extracted to show which stats contribute most to predicting salary. The script also includes visualizations such as 
+a correlation heatmap and a feature importance bar chart. Finally, the script assigns each player a predicted salary and places them into salary tiers based on percentile bands. The output is used as the 
+baseline reference for identifying key performance indicators that drive compensation.
+
+feature_importance.ipynb
+
+This notebook refines feature importance estimation by computing importance values separately for each season rather than treating all seasons the same. For each season, the notebook trains both a Random 
+Forest and an XGBoost model to predict salary based only on players from that year. Feature importances are normalized season-by-season so that weights sum to one. The normalized values are then averaged across 
+all seasons to create a season-adjusted feature importance profile that accounts for the way player valuation changes over time. This produces a more historically accurate representation of which stats have 
+mattered most in different eras. The resulting combined importance weights are saved and used in the improved Performance Index construction in the v2 modeling stage.
+
